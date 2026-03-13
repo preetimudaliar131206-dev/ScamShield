@@ -646,6 +646,74 @@ body::after {
   );
 }
 
+@keyframes scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.scan-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--accent);
+  box-shadow: 0 0 15px var(--accent), 0 0 5px white;
+  z-index: 10;
+  pointer-events: none;
+  display: none;
+  animation: scan 2s linear infinite;
+}
+
+.scanning .scan-line { display: block; }
+.scanning img { filter: brightness(0.6) sepia(1) hue-rotate(90deg) blur(1px); }
+
+.ocr-terminal {
+  background: #000;
+  border: 1px solid var(--border);
+  padding: 12px;
+  margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  max-height: 150px;
+  overflow-y: auto;
+  display: none;
+  border-left: 3px solid var(--accent);
+  position: relative;
+}
+.ocr-terminal::before {
+  content: "DECODED_DATA_SCAN_RESULT:";
+  display: block;
+  font-size: 10px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+.img-clear-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.img-clear-btn:hover {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 0 10px var(--accent);
+}
+
 @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .fade-in{animation:fadeIn 0.35s ease both;}
@@ -988,19 +1056,24 @@ body::after {
             <div id="anl-mode-text">
               <textarea class="msg-ta" id="anl-input" style="min-height:150px;" placeholder="Paste SMS, WhatsApp message, email body, or transcribe a suspicious phone call here…"></textarea>
             </div>
-            <div id="anl-mode-upload" style="display:none;">
-              <div class="upload-zone" id="anl-upload-zone">
-                <input type="file" id="anl-file-input" accept="image/*"/>
-                <div class="upload-icon">📸</div>
-                <div class="upload-title">Upload Message Screenshot</div>
-                <div class="upload-sub">Drag & drop or click · JPG, PNG, WebP</div>
-                <div class="upload-btn-lbl">Browse Files</div>
-              </div>
-              <div id="anl-img-wrap" style="display:none;">
-                <img id="anl-img" src="" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid var(--border);margin-top:10px;"/>
+              <div id="anl-mode-upload" style="display:none;">
+                <div class="upload-zone" id="anl-upload-zone">
+                  <input type="file" id="anl-file-input" accept="image/*"/>
+                  <div class="upload-icon">📸</div>
+                  <div class="upload-title">Upload Message Screenshot</div>
+                  <div class="upload-sub">Drag & drop or click · JPG, PNG, WebP</div>
+                  <div class="upload-btn-lbl">Browse Files</div>
+                </div>
+                <!-- Image Preview with Scan Line -->
+                <div id="anl-img-wrap" style="display:none; position:relative; overflow:hidden; border-radius:10px; border:1px solid var(--border); margin-top:10px;">
+                  <button class="img-clear-btn" onclick="clearOCR('anl')">×</button>
+                  <div class="scan-line"></div>
+                  <img id="anl-img" src="" style="width:100%; max-height:220px; object-fit:contain; display:block;"/>
+                </div>
+                <!-- Extracted Text Terminal -->
+                <div class="ocr-terminal" id="anl-ocr-terminal"></div>
                 <div class="ocr-stat" id="anl-ocr" style="margin-top:8px;"><div class="ocr-spin"></div><span id="anl-ocr-txt">Extracting text from image…</span></div>
               </div>
-            </div>
             <div class="an-footer">
               <span class="char-info" id="anl-char">0 characters</span>
               <div class="btn-group">
@@ -1721,7 +1794,7 @@ document.getElementById('anl-tab-text').addEventListener('click',()=>{
   document.getElementById('anl-mode-upload').style.display='none';
 });
 document.getElementById('anl-tab-upload').addEventListener('click',()=>{
-  if(state.plan==='free'){alert('📷 Screenshot OCR requires Pro or Enterprise plan. Upgrade to unlock!');return;}
+  // Removed Pro check for demo
   document.getElementById('anl-tab-upload').classList.add('active');
   document.getElementById('anl-tab-text').classList.remove('active');
   document.getElementById('anl-mode-text').style.display='none';
@@ -1736,34 +1809,68 @@ auz.addEventListener('dragleave',()=>auz.style.borderColor='');
 auz.addEventListener('drop',e=>{e.preventDefault();auz.style.borderColor='';handleOCR(e.dataTransfer.files[0],'anl');});
 
 /* ══ OCR ══ */
+function clearOCR(pfx){
+  const wrapId = pfx==='dash' ? 'dash-img-preview-wrap' : 'anl-img-wrap';
+  const statId = pfx==='dash' ? 'dash-ocr-stat' : 'anl-ocr';
+  const termId = pfx==='dash' ? 'dash-ocr-terminal' : 'anl-ocr-terminal';
+  const inputId = pfx==='dash' ? 'dash-file-input' : 'anl-file-input';
+  
+  document.getElementById(wrapId).style.display='none';
+  document.getElementById(statId).style.display='none';
+  document.getElementById(termId).style.display='none';
+  document.getElementById(inputId).value = '';
+  
+  if(pfx==='dash'){ dashText=''; dashInput.value=''; dashInput.dispatchEvent(new Event('input')); }
+  else { anlText=''; anlInput.value=''; anlInput.dispatchEvent(new Event('input')); }
+}
+
 function handleOCR(file,pfx){
   if(!file||!file.type.startsWith('image/')) return;
   const url=URL.createObjectURL(file);
-  if(pfx==='dash'){
-    document.getElementById('dash-img-preview-wrap').style.display='block';
-    document.getElementById('dash-img-preview').src=url;
-    const ocrStat=document.getElementById('dash-ocr-stat');
-    const ocrTxt=document.getElementById('dash-ocr-txt');
-    ocrStat.style.display='flex';
-    ocrTxt.textContent='Extracting text from image…';
-    Tesseract.recognize(url).then(r=>{
-      const txt=r.data.text.trim();
-      ocrTxt.textContent=txt?`✅ Extracted ${txt.length} chars`:'⚠️ No text found';
-      if(txt){dashText=txt;document.getElementById('dash-btn-analyze').disabled=false;document.getElementById('dash-char').textContent=txt.length+' chars';}
-    }).catch(()=>{ocrTxt.textContent='❌ OCR failed';});
-  } else {
-    document.getElementById('anl-img-wrap').style.display='block';
-    document.getElementById('anl-img').src=url;
-    const ocrEl=document.getElementById('anl-ocr');
-    const ocrTxt=document.getElementById('anl-ocr-txt');
-    ocrEl.style.display='flex';
-    ocrTxt.textContent='Extracting text from image…';
-    Tesseract.recognize(url).then(r=>{
-      const txt=r.data.text.trim();
-      ocrTxt.textContent=txt?`✅ Extracted ${txt.length} chars`:'⚠️ No text found';
-      if(txt){anlText=txt;document.getElementById('anl-btn-analyze').disabled=false;document.getElementById('anl-char').textContent=txt.length+' characters';}
-    }).catch(()=>{ocrTxt.textContent='❌ OCR failed';});
-  }
+  const wrapId = pfx==='dash' ? 'dash-img-preview-wrap' : 'anl-img-wrap';
+  const imgId = pfx==='dash' ? 'dash-img-preview' : 'anl-img';
+  const statId = pfx==='dash' ? 'dash-ocr-stat' : 'anl-ocr';
+  const txtId = pfx==='dash' ? 'dash-ocr-txt' : 'anl-ocr-txt';
+  const termId = pfx==='dash' ? 'dash-ocr-terminal' : 'anl-ocr-terminal';
+
+  const wrap = document.getElementById(wrapId);
+  const img = document.getElementById(imgId);
+  const stat = document.getElementById(statId);
+  const txt = document.getElementById(txtId);
+  const term = document.getElementById(termId);
+
+  wrap.style.display='block';
+  wrap.classList.add('scanning');
+  img.src=url;
+  stat.style.display='flex';
+  txt.textContent='System Decoding...';
+  term.style.display='none';
+
+  Tesseract.recognize(url).then(r=>{
+    wrap.classList.remove('scanning');
+    const extracted = r.data.text.trim();
+    txt.textContent=extracted?`✅ Decryption Complete (${extracted.length} chars)`:'⚠️ No data found';
+    
+    if(extracted){
+      term.style.display='block';
+      term.textContent = extracted;
+      if(pfx==='dash') {
+        dashText=extracted;
+        dashInput.value = extracted;
+        dashInput.dispatchEvent(new Event('input'));
+        setTimeout(dashAnalyze, 500); // Auto-analyze with slight delay for visuals
+      } else {
+        anlText=extracted;
+        anlInput.value = extracted;
+        anlInput.dispatchEvent(new Event('input'));
+        setTimeout(anlAnalyze, 500); // Auto-analyze with slight delay for visuals
+      }
+    }
+  }).catch(err=>{
+    wrap.classList.remove('scanning');
+    txt.textContent='❌ System Error: Decode Failed';
+    console.error(err);
+  });
 }
 
 /* ══ EXAMPLES (Dashboard) ══ */

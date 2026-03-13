@@ -15,10 +15,10 @@ app.get('/', (req, res) => {
 app.use(express.static(__dirname));
 
 // NLP Scam Pattern Detection Rules
-const PHISHING_KW = ["verify your account", "suspended", "click here", "otp", "account will be blocked", "unusual activity", "confirm your details", "update your information", "security alert", "kyc expired", "blocked", "authenticate", "login", "your account", "bit.ly", "tinyurl", "link", "update immediately"];
-const URGENCY_KW  = ["urgent", "immediate action", "act now", "immediately", "right now", "limited time", "within 24 hours", "before it expires", "permanently blocked", "funds seized", "2 hours"];
-const PERSONAL_KW = ["pin", "password", "cvv", "social security", "aadhaar", "bank account", "account number", "credit card", "debit card", "ifsc", "atm"];
-const LURE_KW     = ["won", "prize", "lottery", "inheritance", "refund", "tax refund", "unclaimed", "bitcoin", "crypto", "double your money", "guaranteed returns", "wire transfer", "gift card", "₹25", "reward", "congratulations"];
+const PHISHING_KW = ["verify your account", "suspended", "click here", "otp", "account will be blocked", "unusual activity", "confirm your details", "update your information", "security alert", "kyc expired", "blocked", "authenticate", "login", "your account", "bit.ly", "tinyurl", "link", "update immediately", "scam alert", "phishing detected", "detected scam", "fake alert"];
+const URGENCY_KW  = ["urgent", "immediate action", "act now", "immediately", "right now", "limited time", "within 24 hours", "before it expires", "permanently blocked", "funds seized", "2 hours", "account risk", "high risk", "warning"];
+const PERSONAL_KW = ["pin", "password", "cvv", "social security", "aadhaar", "bank account", "account number", "credit card", "debit card", "ifsc", "atm", "mpin"];
+const LURE_KW     = ["won", "prize", "lottery", "inheritance", "refund", "tax refund", "unclaimed", "bitcoin", "crypto", "double your money", "guaranteed returns", "wire transfer", "gift card", "₹25", "reward", "congratulations", "bonus cash", "cashback claim"];
 const SAFE_KW     = ["if not done by you", "we will never ask", "official", "call back", "reference number", "your branch", "visit your bank", "-sbi", "-hdfc", "-icici", "-axis"];
 
 // Helper to extract specific link patterns
