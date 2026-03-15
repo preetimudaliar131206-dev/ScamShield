@@ -15,7 +15,9 @@ ScamShield is an AI-powered web application that helps users detect **phishing e
 * **Frontend:** html, Next.js, React
 * **Backend:** Node.js, Express.js
 * **AI Tools:** NLP detection, Regex analysis, Tesseract.js OCR
-* **APIs:** Gmail API, Google OAuth
+* **APIs:** Gmail API, Google OAuth*
+* 
+video link : https://drive.google.com/file/d/1oBF7ej0_KocDp1QxqZQ4qDe_b5XNnDNG/view?usp=sharing
 
 ## ⚙️ Installation
 
