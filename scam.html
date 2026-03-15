@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ScamShield — Banking Scam Detector</title>
+<title>ScamShield — AI Banking Fraud Detection</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -717,6 +718,139 @@ body::after {
 @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .fade-in{animation:fadeIn 0.35s ease both;}
+/* Google Button & Divider */
+.login-divider{display:flex;align-items:center;gap:12px;margin:24px 0;font-size:10px;color:var(--muted-foreground);font-family:'Orbitron',sans-serif;text-transform:uppercase;letter-spacing:1px;}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.google-btn-wrap {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+.google-btn-custom {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--accent-secondary);
+  color: var(--accent-secondary);
+  font-size: 13px;
+  font-weight: 900;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s;
+  clip-path: polygon(0 5px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+.google-btn-custom:hover {
+  background: var(--accent-secondary);
+  color: var(--background);
+  box-shadow: 0 0 15px var(--accent-secondary);
+}
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+</style>
+<style>
+/* ══ CHAT BOX ══ */
+#chat-widget {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+#chat-btn {
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  color: var(--background);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--box-shadow-neon);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: none;
+}
+#chat-btn:hover {
+  transform: scale(1.1) rotate(10deg);
+  filter: brightness(1.2);
+}
+#chat-window {
+  width: 350px;
+  height: 450px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  box-shadow: var(--box-shadow-neon);
+  display: none;
+  flex-direction: column;
+  margin-bottom: 20px;
+  clip-path: polygon(0 20px, 20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  animation: slideUp 0.3s ease-out;
+}
+#chat-window.open { display: flex; }
+#chat-header {
+  padding: 16px;
+  background: var(--theme-accent);
+  border-bottom: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#chat-header span { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+#chat-close { background: none; border: none; color: var(--muted-foreground); cursor: pointer; font-size: 18px; }
+#chat-close:hover { color: var(--destructive); }
+#chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.chat-msg { padding: 10px 14px; border-radius: 10px; max-width: 85%; line-height: 1.5; }
+.chat-msg.user { background: var(--theme-faint); border: 1px solid var(--border); align-self: flex-end; color: var(--foreground); }
+.chat-msg.bot { background: var(--theme-accent); border: 1px solid var(--accent); align-self: flex-start; color: var(--accent); }
+#chat-input-area {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+#chat-input {
+  flex: 1;
+  background: var(--input);
+  border: 1px solid var(--border);
+  padding: 10px;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  outline: none;
+}
+#chat-input:focus { border-color: var(--accent); }
+#chat-send {
+  background: var(--accent);
+  color: var(--background);
+  border: none;
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: 900;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  font-size: 11px;
+}
 </style>
 </head>
 <body>
@@ -735,6 +869,28 @@ body::after {
     <label class="login-label">Password</label>
     <input class="login-input" id="login-pass" type="password" placeholder="••••••••" value="demo123"/>
     <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    
+    <div class="login-divider">or connect with</div>
+    
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+         data-callback="handleGoogleAuth"
+         data-auto_prompt="false">
+    </div>
+    <div class="google-btn-wrap">
+      <button class="google-btn-custom" onclick="document.querySelector('.S3707B-v9tZ8c').click()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Sign In with Google
+      </button>
+      <!-- Hidden real button for GIS trigger -->
+      <div class="g_id_signin" data-type="standard" style="display:none;"></div>
+    </div>
+
     <div class="login-divider">or try a demo account</div>
     <div class="login-demo-btns">
       <div class="demo-btn" onclick="quickLogin('free')">
@@ -811,6 +967,7 @@ body::after {
   <nav class="sidebar-nav">
     <button class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span> Dashboard</button>
     <button class="nav-item" data-page="analyzer"><span class="nav-icon">🔍</span> Analyzer</button>
+    <button class="nav-item" data-page="email"><span class="nav-icon">📧</span> Email Analysis</button>
     <button class="nav-item" data-page="reports"><span class="nav-icon">📊</span> Reports</button>
     <button class="nav-item" data-page="history"><span class="nav-icon">📋</span> Scan History</button>
     <button class="nav-item" data-page="alerts"><span class="nav-icon">🔔</span> Alerts <span class="nav-badge">3</span></button>
@@ -1374,10 +1531,117 @@ body::after {
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════
+       PAGE: EMAIL ANALYSIS
+  ══════════════════════════════════════════ -->
+  <div class="page" id="page-email">
+    <div class="content">
+      <div class="page-header"><h2>📧 Email Analysis</h2><p>Scan suspicious emails for phishing attempts and fraudulent links.</p></div>
+      <div class="main-grid">
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><span class="card-title">Analyze Email Content</span><button class="card-action" onclick="emailClear()">Clear</button></div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <label class="login-label">Email Subject</label>
+                <input class="login-input" id="email-subj" type="text" placeholder="e.g. Urgent: Your account is locked"/>
+              </div>
+              <div>
+                <label class="login-label">Email Body</label>
+                <textarea class="msg-ta" id="email-body" style="min-height:200px;" placeholder="Paste the full email body here…"></textarea>
+              </div>
+            </div>
+            <div class="an-footer">
+              <span class="char-info" id="email-char">0 characters</span>
+              <div class="btn-group">
+                <button class="btn-clear" id="email-btn-clear" style="display:none;" onclick="emailClear()">Clear</button>
+                <button class="btn-analyze" id="email-btn-analyze" disabled onclick="emailAnalyze()"><span>Scan Email</span><span>→</span></button>
+              </div>
+            </div>
+            <div class="result-panel" id="email-result">
+              <div class="result-top"><div class="result-verdict" id="email-verdict"></div><div class="risk-badge" id="email-badge"></div></div>
+              <div class="score-bar-wrap"><div class="score-bar-lbl"><span>Risk Score</span><span id="email-score-lbl">0/100</span></div><div class="score-bar-bg"><div class="score-bar-fill" id="email-score-bar"></div></div></div>
+              <div id="email-flags-wrap" style="display:none;margin-bottom:10px;"><div class="flags-lbl">🚩 SIGNALS DETECTED</div><div class="flags-list" id="email-flags-list"></div></div>
+              <div class="hl-msg" id="email-hl-msg" style="display:none;margin-top:10px;"></div>
+              <div id="email-explanation-box" style="margin-top:12px; padding:12px; border-radius:10px; font-size:13px; display:none; border-left:4px solid;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Risk Analysis</span></div>
+            <div class="gauge-wrap">
+              <svg class="gauge-svg" viewBox="0 0 150 85">
+                <path class="g-track" d="M18 76 A56 56 0 0 1 132 76" fill="none"/>
+                <path class="g-fill" id="email-gauge-fill" d="M18 76 A56 56 0 0 1 132 76" fill="none"/>
+                <text id="email-gauge-score" x="75" y="72" text-anchor="middle" fill="var(--green)" font-size="26" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">0</text>
+                <text x="75" y="84" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="'Plus Jakarta Sans',sans-serif">/100</text>
+              </svg>
+            </div>
+            <div style="text-align:center;margin-bottom:14px;"><span id="email-gauge-verdict" style="font-size:13px;font-weight:700;color:var(--muted);">Waiting for scan</span></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📧 Email Safety Tips</span></div>
+            <div class="tips-list">
+              <div class="tip-row"><div class="tip-dot"></div><p class="tip-txt"><strong>Check the sender's email address</strong> carefully. Phishers use look-alike domains.</p></div>
+              <div class="tip-row"><div class="tip-dot"></div><p class="tip-txt"><strong>Banks rarely send attachments.</strong> Never open .zip or .exe from unknown emails.</p></div>
+              <div class="tip-row"><div class="tip-dot"></div><p class="tip-txt"><strong>Look for generic greetings</strong> like "Dear Customer" instead of your name.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main-app -->
 
 <!-- ════════════ JAVASCRIPT ════════════ -->
 <script>
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch(e) { return null; }
+}
+
+function handleGoogleAuth(response) {
+  const profile = parseJwt(response.credential);
+  if(!profile) return;
+  
+  state.isLoggedIn = true;
+  state.user = {
+    name: profile.name,
+    email: profile.email,
+    plan: 'Pro', // Give Google users Pro status for the demo
+    avatar: profile.picture
+  };
+  
+  // Update UI Elements
+  document.getElementById('hud-user-name').textContent = profile.name;
+  document.getElementById('hud-user-role').textContent = 'PRO OPERATOR';
+  document.getElementById('sidebar-user-name').textContent = profile.name;
+  
+  const hudAvatar = document.querySelector('.u-avatar');
+  if(hudAvatar) hudAvatar.innerHTML = `<img src="${profile.picture}" style="width:100%;height:100%;object-fit:cover;">`;
+  
+  const setAvatar = document.getElementById('set-avatar');
+  if(setAvatar) {
+    setAvatar.innerHTML = `<img src="${profile.picture}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+  }
+  
+  document.getElementById('set-name').textContent = profile.name;
+  document.getElementById('set-email').textContent = profile.email;
+  document.getElementById('set-plan-name').textContent = 'Pro Plan';
+  
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  
+  updateStats();
+}
 /* ══ STATE ══ */
 const state = {
   user: null,
@@ -1500,7 +1764,7 @@ function navigateTo(page){
   const nav=document.querySelector(`[data-page="${page}"]`);
   if(nav) nav.classList.add('active');
   state.currentPage=page;
-  const titles={dashboard:'Dashboard',analyzer:'Analyzer',reports:'Reports',history:'Scan History',alerts:'Alerts',banks:'Banks',learn:'Learn',subscription:'Subscription',settings:'Settings'};
+  const titles={dashboard:'Dashboard',analyzer:'Analyzer',email:'Email Analysis',reports:'Reports',history:'Scan History',alerts:'Alerts',banks:'Banks',learn:'Learn',subscription:'Subscription',settings:'Settings'};
   document.getElementById('hdr-title').textContent=titles[page]||page;
   document.getElementById('hdr-crumb').textContent=titles[page]||page;
   if(page==='alerts'){
@@ -1896,6 +2160,76 @@ function saveProfile(){
   alert('✅ Profile saved successfully! (Demo mode)');
 }
 
+/* ══ EMAIL ANALYSIS PAGE ══ */
+const emailSubj=document.getElementById('email-subj');
+const emailBody=document.getElementById('email-body');
+const emailBtn=document.getElementById('email-btn-analyze');
+
+function updateEmailChar(){
+  const len=(emailSubj.value + emailBody.value).length;
+  document.getElementById('email-char').textContent=len+' characters';
+  emailBtn.disabled=len<5;
+  document.getElementById('email-btn-clear').style.display=len?'inline-flex':'none';
+  document.getElementById('email-result').classList.remove('vis');
+  setTheme(false);
+}
+emailSubj.addEventListener('input',updateEmailChar);
+emailBody.addEventListener('input',updateEmailChar);
+
+function emailClear(){
+  emailSubj.value=''; emailBody.value='';
+  updateEmailChar();
+}
+
+function emailAnalyze(){
+  const text = "Subject: " + emailSubj.value + "\n\nBody: " + emailBody.value;
+  if(!text.trim()) return;
+  if(!canScan()){openModal();return;}
+  emailBtn.disabled=true;
+  emailBtn.innerHTML='<div class="btn-spin"></div><span>Scanning…</span>';
+  setTimeout(()=>{
+    doAnalyze(text,'email','email');
+    emailBtn.disabled=false;
+    emailBtn.innerHTML='<span>Scan Email</span><span>→</span>';
+  },1200);
+}
+
+/* ══ CHAT WIDGET ══ */
+function toggleChat(){
+  document.getElementById('chat-window').classList.toggle('open');
+}
+async function sendChatMessage(){
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();
+  if(!msg) return;
+  
+  appendMessage('user', msg);
+  input.value='';
+  
+  try {
+    const response = await fetch('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg })
+    });
+    const result = await response.json();
+    appendMessage('bot', result.response);
+  } catch(e) {
+    appendMessage('bot', "System error: Connection to neural network lost.");
+  }
+}
+function appendMessage(role, text){
+  const container=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className=`chat-msg ${role}`;
+  div.textContent=text;
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+}
+document.getElementById('chat-input')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter') sendChatMessage();
+});
+
 /* ══ FILTER CHIPS (History) ══ */
 document.querySelectorAll('.filter-chip').forEach(chip=>{
   chip.addEventListener('click',function(){
@@ -1912,5 +2246,23 @@ document.addEventListener('keydown',e=>{
   }
 });
 </script>
+<!-- ══ CHAT WIDGET ══ -->
+<div id="chat-widget">
+  <div id="chat-window">
+    <div id="chat-header">
+      <span>🛡️ ScamShield AI</span>
+      <button id="chat-close" onclick="toggleChat()">×</button>
+    </div>
+    <div id="chat-messages">
+      <div class="chat-msg bot">Hello! I am your ScamShield AI assistant. How can I help you stay safe today?</div>
+    </div>
+    <div id="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ask about scam patterns..."/>
+      <button id="chat-send" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+  <button id="chat-btn" onclick="toggleChat()">💬</button>
+</div>
+
 </body>
 </html>

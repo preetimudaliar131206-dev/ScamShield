@@ -20,6 +20,7 @@ const URGENCY_KW  = ["urgent", "immediate action", "act now", "immediately", "ri
 const PERSONAL_KW = ["pin", "password", "cvv", "social security", "aadhaar", "bank account", "account number", "credit card", "debit card", "ifsc", "atm", "mpin"];
 const LURE_KW     = ["won", "prize", "lottery", "inheritance", "refund", "tax refund", "unclaimed", "bitcoin", "crypto", "double your money", "guaranteed returns", "wire transfer", "gift card", "₹25", "reward", "congratulations", "bonus cash", "cashback claim"];
 const SAFE_KW     = ["if not done by you", "we will never ask", "official", "call back", "reference number", "your branch", "visit your bank", "-sbi", "-hdfc", "-icici", "-axis"];
+const EMAIL_KW    = ["noreply", "unsubscribe", "view in browser", "legal notice", "confidentiality", "security officer", "customer support", "support id", "case #"];
 
 // Helper to extract specific link patterns
 function extractLinks(text) {
@@ -27,14 +28,8 @@ function extractLinks(text) {
   return text.match(urlRegex) || [];
 }
 
-app.post('/api/detect-scam', (req, res) => {
-  const { message_text } = req.body;
-
-  if (!message_text || typeof message_text !== 'string' || !message_text.trim()) {
-    return res.status(400).json({ error: 'message_text is required and must be a string' });
-  }
-
-  const text = message_text;
+// Core Scam Detection Engine
+function analyzeMessageText(text) {
   const lower = text.toLowerCase();
   
   const p = PHISHING_KW.filter(k => lower.includes(k));
@@ -42,14 +37,15 @@ app.post('/api/detect-scam', (req, res) => {
   const d = PERSONAL_KW.filter(k => lower.includes(k));
   const l = LURE_KW.filter(k => lower.includes(k));
   const s = SAFE_KW.filter(k => lower.includes(k));
+  const e = EMAIL_KW.filter(k => lower.includes(k));
   
-  const allPatterns = [...new Set([...p, ...u, ...d, ...l])];
+  const allPatterns = [...new Set([...p, ...u, ...d, ...l, ...e])];
   const links = extractLinks(text);
   if (links.length > 0) {
       allPatterns.push('Suspicious links detected: ' + links.join(', '));
   }
 
-  let score = p.length * 14 + u.length * 16 + d.length * 15 + l.length * 12 - s.length * 18;
+  let score = p.length * 14 + u.length * 16 + d.length * 15 + l.length * 12 + e.length * 10 - s.length * 18;
   if (/don'?t tell|do not inform|keep this confidential/i.test(text)) score += 22;
   
   // Link penalty
@@ -71,12 +67,47 @@ app.post('/api/detect-scam', (req, res) => {
     explanation = "No strong scam signals detected. Appears to be a standard or safe communication.";
   }
 
-  res.json({
+  return {
     risk_level,
     confidence_score: score,
     explanation,
     detected_patterns: allPatterns
-  });
+  };
+}
+
+app.post('/api/detect-scam', (req, res) => {
+  const { message_text } = req.body;
+  if (!message_text || typeof message_text !== 'string' || !message_text.trim()) {
+    return res.status(400).json({ error: 'message_text is required' });
+  }
+  const result = analyzeMessageText(message_text);
+  res.json(result);
+});
+
+app.post('/api/chat', (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message is required' });
+
+  const text = message.toLowerCase();
+  
+  // First, run full analysis
+  const analysis = analyzeMessageText(message);
+  
+  let response = "";
+
+  if (analysis.confidence_score >= 35) {
+    response = `⚠️ ANALYSIS RESULT: This message looks ${analysis.risk_level.toLowerCase()} (Risk Score: ${analysis.confidence_score}/100).\n\n${analysis.explanation}\n\nDetected Signals: ${analysis.detected_patterns.slice(0, 3).join(', ')}...`;
+  } else if (text.includes("scam") || text.includes("check") || text.includes("analyze")) {
+    response = "I can analyze any message for you! Just paste the SMS or email text here, and I'll run a safety scan. You can also use the Message Analyzer for screenshots.";
+  } else if (text.includes("lottery") || text.includes("won") || text.includes("prize")) {
+    response = "Lottery and prize scams are very common. Never share your OTP, PIN, or bank details to claim a 'prize'.";
+  } else if (text.includes("sbi") || text.includes("rbi") || text.includes("bank") || text.includes("blocked")) {
+    response = "Banks will never ask for your confidential information over a chat or call. If you've received such a message, it is likely a scam!";
+  } else {
+    response = "I am your ScamShield assistant. You can paste any suspicious message here and I'll analyze it for you, or ask me about common scam patterns!";
+  }
+
+  res.json({ response });
 });
 
 const PORT = process.env.PORT || 3000;
