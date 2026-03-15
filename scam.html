@@ -1398,7 +1398,7 @@ body::after {
     <div class="content">
       <div class="page-header"><h2>⭐ Subscription Plans</h2><p>Choose the plan that fits your protection needs.</p></div>
       <div id="current-plan-banner" style="background:var(--green-faint);border:1.5px solid var(--green-pale);border-radius:14px;padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;">
-        <div><strong style="font-size:14px;" id="curr-plan-name">Current Plan: Free</strong><br><small style="color:var(--muted);" id="curr-plan-desc">10 scans included per month</small></div>
+        <div><strong style="font-size:14px;" id="curr-plan-name">Current Plan: Free</strong><br><small style="color:var(--muted);" id="curr-plan-desc">20 scans included per month</small></div>
         <span class="status-chip s-safe" id="curr-plan-badge">Active</span>
       </div>
       <div class="plans-full">
@@ -1407,7 +1407,7 @@ body::after {
           <div class="plan-n">Free</div>
           <div class="plan-p">₹0<span>/month</span></div>
           <ul class="plan-f">
-            <li>10 scans per month</li>
+            <li>20 scans per month</li>
             <li>Text message analysis</li>
             <li>Basic risk score</li>
             <li>Scam keyword detection</li>
@@ -1454,7 +1454,7 @@ body::after {
         <table class="compare-table">
           <thead><tr><th>Feature</th><th>Free</th><th>Pro</th><th>Enterprise</th></tr></thead>
           <tbody>
-            <tr><td>Monthly scans</td><td>10</td><td>500</td><td>Unlimited</td></tr>
+            <tr><td>Monthly scans</td><td>20</td><td>500</td><td>Unlimited</td></tr>
             <tr><td>Text analysis</td><td><span class="chk">✓</span></td><td><span class="chk">✓</span></td><td><span class="chk">✓</span></td></tr>
             <tr><td>Screenshot OCR</td><td><span class="crs">✗</span></td><td><span class="chk">✓</span></td><td><span class="chk">✓</span></td></tr>
             <tr><td>Detailed reports</td><td><span class="crs">✗</span></td><td><span class="chk">✓</span></td><td><span class="chk">✓</span></td></tr>
@@ -1521,7 +1521,7 @@ body::after {
             <div class="card-header"><span class="card-title">⭐ Plan</span></div>
             <div style="text-align:center;padding:10px 0;">
               <div style="font-size:22px;font-weight:800;color:var(--theme-primary);margin-bottom:4px;" id="set-plan-name">Free Plan</div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="set-plan-scans">10 scans remaining</div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="set-plan-scans">20 scans remaining</div>
               <button class="btn-analyze" style="width:100%;justify-content:center;" onclick="navigateTo('subscription')"><span>⭐ Upgrade Plan</span></button>
               <button class="sidebar-logout" style="margin-top:10px;width:100%;justify-content:center;border-radius:12px;padding:11px;font-size:14px;" onclick="doLogout()">🚪 Sign Out</button>
             </div>
@@ -1647,7 +1647,7 @@ const state = {
   user: null,
   plan: 'free', // free | pro | enterprise
   scansUsed: 0,
-  freeLimit: 10,
+  freeLimit: 20,
   scanHistory: [],
   stats: {total:0, scams:0, susp:0, safe:0},
   currentPage: 'dashboard'
@@ -1745,7 +1745,7 @@ function updateUserUI(){
   document.getElementById('set-plan-name').textContent=planLabel;
   document.getElementById('set-plan-scans').textContent=state.plan==='free'?`${state.freeLimit-state.scansUsed} scans remaining`:'Unlimited scans';
   document.getElementById('curr-plan-name').textContent='Current Plan: '+planLabel;
-  document.getElementById('curr-plan-desc').textContent=state.plan==='free'?'10 scans per month included':'Unlimited scans active';
+  document.getElementById('curr-plan-desc').textContent=state.plan==='free'?'20 scans per month included':'Unlimited scans active';
   if(state.plan!=='free'){
     document.getElementById('free-btn').textContent='Current Plan';
     document.getElementById('free-btn').disabled=false;
