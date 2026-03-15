@@ -29,6 +29,20 @@ async function runTests() {
         const scamResult = await post('/api/detect-scam', { message_text: "Urgent: Account blocked. bit.ly/scam" });
         console.log("Result:", scamResult.risk_level, scamResult.confidence_score);
 
+        console.log("\nTesting /api/check-phone...");
+        const phoneResult = await new Promise((resolve, reject) => {
+            http.get('http://localhost:3000/api/check-phone?number=%2B911234567890', res => {
+                let body = '';
+                res.on('data', chunk => body += chunk);
+                res.on('end', () => resolve(JSON.parse(body)));
+            }).on('error', reject);
+        });
+        console.log("Phone Result:", phoneResult.risk, phoneResult.tag);
+
+        console.log("\nTesting /api/report-scam...");
+        const reportResult = await post('/api/report-scam', { message: "Reported scam text", type: "MANUAL" });
+        console.log("Report Result:", reportResult.success);
+
         console.log("\nTesting /api/chat...");
         const chatResult = await post('/api/chat', { message: "I won a lottery" });
         console.log("Result:", chatResult.response);

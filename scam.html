@@ -1118,6 +1118,7 @@ body::after {
               </div>
               <div class="hl-msg" id="dash-hl-msg" style="display:none;margin-top:10px;"></div>
               <div id="dash-explanation-box" style="margin-top:12px; padding:12px; border-radius:10px; font-size:13px; display:none; border-left:4px solid;"></div>
+              <button class="card-action" id="dash-report-btn" style="margin-top:12px; width:100%; border-color:var(--destructive); color:var(--destructive);" onclick="reportScam('dash')">⚠️ Report this Scam</button>
             </div>
           </div>
 
@@ -1208,10 +1209,16 @@ body::after {
             <div class="card-header"><span class="card-title">Analyze Message</span><button class="card-action" onclick="anlClear()">Clear</button></div>
             <div class="input-tabs">
               <button class="inp-tab active" data-mode="text" id="anl-tab-text">✏️ Paste Text</button>
+              <button class="inp-tab" data-mode="call" id="anl-tab-call">📞 Call Scanner</button>
               <button class="inp-tab" data-mode="upload" id="anl-tab-upload">📷 Upload Screenshot</button>
             </div>
             <div id="anl-mode-text">
               <textarea class="msg-ta" id="anl-input" style="min-height:150px;" placeholder="Paste SMS, WhatsApp message, email body, or transcribe a suspicious phone call here…"></textarea>
+            </div>
+            <div id="anl-mode-call" style="display:none;">
+              <label class="login-label">Suspicious Phone Number</label>
+              <input class="login-input" id="anl-phone-input" type="text" placeholder="e.g. +91 99999 55555"/>
+              <p style="font-size:11px;color:var(--muted-foreground);margin-top:-8px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;">Search our database for reported numbers.</p>
             </div>
               <div id="anl-mode-upload" style="display:none;">
                 <div class="upload-zone" id="anl-upload-zone">
@@ -1236,6 +1243,7 @@ body::after {
               <div class="btn-group">
                 <button class="btn-clear" id="anl-btn-clear" style="display:none;" onclick="anlClear()">Clear</button>
                 <button class="btn-analyze" id="anl-btn-analyze" disabled onclick="anlAnalyze()"><span>Analyze Now</span><span>→</span></button>
+                <button class="btn-analyze" id="anl-btn-call" style="display:none;" onclick="callAnalyze()"><span>Check Number</span><span>→</span></button>
               </div>
             </div>
             <div class="result-panel" id="anl-result">
@@ -1244,6 +1252,7 @@ body::after {
               <div id="anl-flags-wrap" style="display:none;margin-bottom:10px;"><div class="flags-lbl">🚩 SIGNALS DETECTED</div><div class="flags-list" id="anl-flags-list"></div></div>
               <div class="hl-msg" id="anl-hl-msg" style="display:none;margin-top:10px;"></div>
               <div id="anl-explanation-box" style="margin-top:12px; padding:12px; border-radius:10px; font-size:13px; display:none; border-left:4px solid;"></div>
+              <button class="card-action" id="anl-report-btn" style="margin-top:12px; width:100%; border-color:var(--destructive); color:var(--destructive);" onclick="reportScam('analyzer')">⚠️ Report this Scam</button>
             </div>
           </div>
           <div class="card">
@@ -1564,6 +1573,7 @@ body::after {
               <div id="email-flags-wrap" style="display:none;margin-bottom:10px;"><div class="flags-lbl">🚩 SIGNALS DETECTED</div><div class="flags-list" id="email-flags-list"></div></div>
               <div class="hl-msg" id="email-hl-msg" style="display:none;margin-top:10px;"></div>
               <div id="email-explanation-box" style="margin-top:12px; padding:12px; border-radius:10px; font-size:13px; display:none; border-left:4px solid;"></div>
+              <button class="card-action" id="email-report-btn" style="margin-top:12px; width:100%; border-color:var(--destructive); color:var(--destructive);" onclick="reportScam('email')">⚠️ Report this Scam</button>
             </div>
           </div>
         </div>
@@ -2054,15 +2064,32 @@ function anlLoadEx(text){anlInput.value=text;anlText=text;anlInput.dispatchEvent
 document.getElementById('anl-tab-text').addEventListener('click',()=>{
   document.getElementById('anl-tab-text').classList.add('active');
   document.getElementById('anl-tab-upload').classList.remove('active');
+  document.getElementById('anl-tab-call').classList.remove('active');
   document.getElementById('anl-mode-text').style.display='block';
   document.getElementById('anl-mode-upload').style.display='none';
+  document.getElementById('anl-mode-call').style.display='none';
+  document.getElementById('anl-btn-analyze').style.display='flex';
+  document.getElementById('anl-btn-call').style.display='none';
+});
+document.getElementById('anl-tab-call').addEventListener('click',()=>{
+  document.getElementById('anl-tab-call').classList.add('active');
+  document.getElementById('anl-tab-text').classList.remove('active');
+  document.getElementById('anl-tab-upload').classList.remove('active');
+  document.getElementById('anl-mode-call').style.display='block';
+  document.getElementById('anl-mode-text').style.display='none';
+  document.getElementById('anl-mode-upload').style.display='none';
+  document.getElementById('anl-btn-analyze').style.display='none';
+  document.getElementById('anl-btn-call').style.display='flex';
 });
 document.getElementById('anl-tab-upload').addEventListener('click',()=>{
-  // Removed Pro check for demo
   document.getElementById('anl-tab-upload').classList.add('active');
   document.getElementById('anl-tab-text').classList.remove('active');
+  document.getElementById('anl-tab-call').classList.remove('active');
   document.getElementById('anl-mode-text').style.display='none';
   document.getElementById('anl-mode-upload').style.display='block';
+  document.getElementById('anl-mode-call').style.display='none';
+  document.getElementById('anl-btn-analyze').style.display='flex';
+  document.getElementById('anl-btn-call').style.display='none';
 });
 
 // Analyzer OCR
@@ -2135,6 +2162,67 @@ function handleOCR(file,pfx){
     txt.textContent='❌ System Error: Decode Failed';
     console.error(err);
   });
+}
+
+async function callAnalyze() {
+  const number = document.getElementById('anl-phone-input').value.trim();
+  if(!number) return;
+  if(!canScan()){openModal();return;}
+  const btn = document.getElementById('anl-btn-call');
+  btn.disabled = true; btn.innerHTML = '<div class="btn-spin"></div><span>Searching...</span>';
+  
+  try {
+    const response = await fetch(`http://localhost:3000/api/check-phone?number=${encodeURIComponent(number)}`);
+    const result = await response.json();
+    
+    useOneScan();
+    const mappedResult = {
+      score: result.risk === 'HIGH' ? 85 : 10,
+      risk: result.risk === 'HIGH' ? 'HIGH' : 'LOW',
+      verdict: result.risk === 'HIGH' ? '🚨 Reported Scam Number' : '✅ No Reports Found',
+      foundScam: result.risk === 'HIGH' ? [result.tag] : [],
+      explanation: result.explanation,
+      phishPct: result.risk === 'HIGH' ? 80 : 0, urgPct: 0, persPct: 0, lurePct: 0
+    };
+    
+    renderResult(mappedResult, `Phone: ${number}`, 'anl');
+    animateGauge(mappedResult, 'anl');
+  } catch(e) {
+    alert("Lookup failed. Check server connection.");
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<span>Check Number</span><span>→</span>';
+  }
+}
+
+async function reportScam(pfx) {
+  const text = pfx === 'dash' ? dashText : (pfx === 'anl' ? anlText : (document.getElementById('email-subj').value + " " + document.getElementById('email-body').value));
+  const btn = document.getElementById(pfx + '-report-btn');
+  if(btn) btn.disabled = true;
+  
+  try {
+    await fetch('http://localhost:3000/api/report-scam', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, type: 'MANUAL_REPORT' })
+    });
+    
+    // Create an alert locally too
+    const container = document.getElementById('alerts-container');
+    if(container) {
+      const div = document.createElement('div');
+      div.className = 'alert-item';
+      div.innerHTML = `<div class="alert-unread"></div><div class="alert-ico red">🚨</div><div class="alert-info"><div class="alert-title">User Reported Scam</div><div class="alert-desc">${esc(text.substring(0,60))}...</div></div><span class="alert-time">Just now</span>`;
+      container.insertBefore(div, container.firstChild);
+      
+      const badge = document.querySelector('.nav-badge');
+      if(badge) badge.textContent = parseInt(badge.textContent || '0') + 1;
+      document.getElementById('notif-dot').style.display = 'block';
+    }
+    
+    alert("Thank you! This scam has been reported and added to your alerts.");
+  } catch(e) {
+    alert("Report failed.");
+  }
 }
 
 /* ══ EXAMPLES (Dashboard) ══ */

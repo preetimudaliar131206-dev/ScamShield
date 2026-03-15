@@ -75,6 +75,13 @@ function analyzeMessageText(text) {
   };
 }
 
+// Mock Phone Reputation Database
+const SCAM_NUMBERS = {
+  "+911234567890": { reports: 154, risk: "HIGH", tag: "Fake Bank Support" },
+  "0224567812": { reports: 89, risk: "HIGH", tag: "Insurance Scam" },
+  "+919876543210": { reports: 2, risk: "LOW", tag: "General" }
+};
+
 app.post('/api/detect-scam', (req, res) => {
   const { message_text } = req.body;
   if (!message_text || typeof message_text !== 'string' || !message_text.trim()) {
@@ -82,6 +89,25 @@ app.post('/api/detect-scam', (req, res) => {
   }
   const result = analyzeMessageText(message_text);
   res.json(result);
+});
+
+app.get('/api/check-phone', (req, res) => {
+  const number = req.query.number;
+  if (!number) return res.status(400).json({ error: 'Phone number is required' });
+  
+  const data = SCAM_NUMBERS[number] || { reports: 0, risk: "SAFE", tag: "Unknown" };
+  res.json({
+    number,
+    ...data,
+    explanation: data.risk === "HIGH" ? `This number has been flagged by ${data.reports} users as possible ${data.tag.toLowerCase()}.` : "No prior reports found for this number."
+  });
+});
+
+app.post('/api/report-scam', (req, res) => {
+  const { message, type } = req.body;
+  // In a real app, this would save to a DB
+  console.log(`[REPORT RECEIVED] Type: ${type}, Content: ${message.substring(0, 50)}...`);
+  res.json({ success: true, message: "Scam reported successfully. Thank you for keeping Shield active!" });
 });
 
 app.post('/api/chat', (req, res) => {
