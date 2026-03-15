@@ -105,8 +105,8 @@ app.get('/api/check-phone', (req, res) => {
 
 app.post('/api/report-scam', (req, res) => {
   const { message, type } = req.body;
-  // In a real app, this would save to a DB
-  console.log(`[REPORT RECEIVED] Type: ${type}, Content: ${message.substring(0, 50)}...`);
+  const content = message || "No content provided";
+  console.log(`[REPORT RECEIVED] Type: ${type || 'UNKNOWN'}, Content: ${content.substring(0, 50)}...`);
   res.json({ success: true, message: "Scam reported successfully. Thank you for keeping Shield active!" });
 });
 

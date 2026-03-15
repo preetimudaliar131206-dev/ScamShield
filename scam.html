@@ -1835,7 +1835,7 @@ async function doAnalyze(text, prefix, pagePrefix){
   useOneScan();
   
   try {
-    const response = await fetch('http://localhost:3000/api/detect-scam', {
+    const response = await fetch('/api/detect-scam', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message_text: text })
@@ -2172,7 +2172,7 @@ async function callAnalyze() {
   btn.disabled = true; btn.innerHTML = '<div class="btn-spin"></div><span>Searching...</span>';
   
   try {
-    const response = await fetch(`http://localhost:3000/api/check-phone?number=${encodeURIComponent(number)}`);
+    const response = await fetch(`/api/check-phone?number=${encodeURIComponent(number)}`);
     const result = await response.json();
     
     useOneScan();
@@ -2200,7 +2200,7 @@ async function reportScam(pfx) {
   if(btn) btn.disabled = true;
   
   try {
-    await fetch('http://localhost:3000/api/report-scam', {
+    await fetch('/api/report-scam', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, type: 'MANUAL_REPORT' })
@@ -2295,7 +2295,7 @@ async function sendChatMessage(){
   input.value='';
   
   try {
-    const response = await fetch('http://localhost:3000/api/chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: msg })
